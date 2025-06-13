@@ -110,6 +110,73 @@ if state:
 if entity_level:
     filtered = filtered[filtered['responsible_entity_level'].isin(entity_level)]
 
+# Add a separator in the sidebar
+st.sidebar.markdown("---")
+
+# --- Dynamic Search Based on View Level ---
+st.sidebar.header("View Issues")
+
+# Get the appropriate options based on view level
+if view_level == "State":
+    options = sorted(filtered['state'].unique())
+    selected = st.sidebar.selectbox(
+        "Select State",
+        options=options,
+        index=None,
+        placeholder="Choose a state..."
+    )
+    if selected:
+        location_issues = filtered[filtered['state'] == selected]
+elif view_level == "District":
+    options = sorted(filtered['district'].unique())
+    selected = st.sidebar.selectbox(
+        "Select District",
+        options=options,
+        index=None,
+        placeholder="Choose a district..."
+    )
+    if selected:
+        location_issues = filtered[filtered['district'] == selected]
+else:  # Municipality
+    options = sorted(filtered['municipality'].unique())
+    selected = st.sidebar.selectbox(
+        "Select Municipality",
+        options=options,
+        index=None,
+        placeholder="Choose a municipality..."
+    )
+    if selected:
+        location_issues = filtered[filtered['municipality'] == selected]
+
+# Display issues if a location is selected
+if 'selected' in locals() and selected:
+    if len(location_issues) > 0:
+        # Add category filter dropdown
+        selected_category = st.sidebar.selectbox(
+            "Select Issue Type",
+            options=sorted(location_issues['category'].unique()),
+            format_func=lambda x: f"{category_options[x]} {x}",
+            index=None,
+            placeholder="Choose an issue type..."
+        )
+        
+        if selected_category:
+            # Filter issues for selected category
+            category_issues = location_issues[location_issues['category'] == selected_category]
+            
+            # Display issues for selected category
+            st.sidebar.markdown(f"### {category_options[selected_category]} {selected_category} Issues")
+            for _, issue in category_issues.iterrows():
+                st.sidebar.markdown(f"""
+                <div style='font-size: 14px;'>
+                Date: {issue['date'].date()}<br>
+                Description: {issue['description']}<br>
+                ---
+                </div>
+                """, unsafe_allow_html=True)
+    else:
+        st.sidebar.info(f"No issues found for this {view_level.lower()} in the selected filters.")
+
 # --- Prepare map ---
 m = folium.Map(location=[51.0, 10.0], zoom_start=6)
 
@@ -227,40 +294,5 @@ if show_markers:
                 icon=icon
             ).add_to(marker_cluster)
 
-# --- Show map in the left column ---
-with col1:
-    folium_static(m, width=1000, height=800)
-
-# --- Show municipality issues in the right column ---
-with col2:
-    st.header("Municipality Issues")
-    
-    # Create a selectbox for municipalities
-    selected_municipality = st.selectbox(
-        "Select Municipality",
-        options=sorted(issues_df['municipality'].unique()),
-        index=None,
-        placeholder="Choose a municipality..."
-    )
-    
-    if selected_municipality:
-        # Filter issues for selected municipality
-        municipality_issues = filtered[filtered['municipality'] == selected_municipality]
-        
-        if len(municipality_issues) > 0:
-            # Group issues by category
-            for category in sorted(municipality_issues['category'].unique()):
-                category_issues = municipality_issues[municipality_issues['category'] == category]
-                
-                # Create an expander for each category
-                with st.expander(f"{category_options[category]} {category} ({len(category_issues)} issues)"):
-                    for _, issue in category_issues.iterrows():
-                        st.markdown(f"""
-                        <div style='font-size: 14px;'>
-                        Date: {issue['date'].date()}<br>
-                        Description: {issue['description']}<br>
-                        ---
-                        </div>
-                        """, unsafe_allow_html=True)
-        else:
-            st.info("No issues found for this municipality in the selected filters.")
+# --- Show map in the main area ---
+folium_static(m, width=1400, height=800)
