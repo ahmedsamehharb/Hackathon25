@@ -1,0 +1,53 @@
+/* Make the entire app fill the screen */
+html, body, .main {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* Floating filter toggle button (top-left) */
+#filter-btn {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1002;
+    font-size: 24px;
+    background: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    cursor: pointer;
+}
+
+/* Bottom sliding filter panel */
+.filters {
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    height: 60vh;
+    background-color: white;
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    overflow-y: auto;
+    transition: bottom 0.4s ease-in-out;
+    z-index: 1001;
+}
+
+/* When active, slide the filter panel up */
+.filters.show {
+    bottom: 0;
+}
+
+/* Make the map fill the window completely */
+[data-testid="stFoliumContainer"] {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 1;
+}
