@@ -17,7 +17,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_0aa4413be28e3c0e433edfd8961f9891 {
+                #map_5b836b48ec2483201732179229bf6b99 {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -50,20 +50,23 @@
             </script>
 
         
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/MarkerCluster.Default.css"/>
 </head>
 <body>
     
     
-            <div class="folium-map" id="map_0aa4413be28e3c0e433edfd8961f9891" ></div>
+            <div class="folium-map" id="map_5b836b48ec2483201732179229bf6b99" ></div>
         
 </body>
 <script>
     
     
-            var map_0aa4413be28e3c0e433edfd8961f9891 = L.map(
-                "map_0aa4413be28e3c0e433edfd8961f9891",
+            var map_5b836b48ec2483201732179229bf6b99 = L.map(
+                "map_5b836b48ec2483201732179229bf6b99",
                 {
-                    center: [51.1657, 10.4515],
+                    center: [51.0, 10.0],
                     crs: L.CRS.EPSG3857,
                     ...{
   "zoom": 6,
@@ -78,7 +81,7 @@
 
         
     
-            var tile_layer_aa0b80b065a2352ed5884192badd8e40 = L.tileLayer(
+            var tile_layer_b4bd35816d6463d7d47ebab68c804555 = L.tileLayer(
                 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {
   "minZoom": 0,
@@ -95,45 +98,16 @@
             );
         
     
-            tile_layer_aa0b80b065a2352ed5884192badd8e40.addTo(map_0aa4413be28e3c0e433edfd8961f9891);
+            tile_layer_b4bd35816d6463d7d47ebab68c804555.addTo(map_5b836b48ec2483201732179229bf6b99);
         
     
-            var marker_2747053e1784fe960cf8ef89866009fd = L.marker(
-                [52.52, 13.405],
+            var marker_cluster_162bcf3e9616950aafec19779afd3fd8 = L.markerClusterGroup(
                 {
-}
-            ).addTo(map_0aa4413be28e3c0e433edfd8961f9891);
-        
-    
-            var icon_a2a11e458aa16003fcbe9aa42f13ea15 = L.AwesomeMarkers.icon(
-                {
-  "markerColor": "yellow",
-  "iconColor": "white",
-  "icon": "info-sign",
-  "prefix": "glyphicon",
-  "extraClasses": "fa-rotate-0",
 }
             );
         
     
-        var popup_639630095a2b57a4819123c2587e8e8f = L.popup({
-  "maxWidth": "100%",
-});
-
+            marker_cluster_162bcf3e9616950aafec19779afd3fd8.addTo(map_5b836b48ec2483201732179229bf6b99);
         
-            
-                var html_359bd72c5bc15d505ecbb97225e11c0c = $(`<div id="html_359bd72c5bc15d505ecbb97225e11c0c" style="width: 100.0%; height: 100.0%;">Berlin</div>`)[0];
-                popup_639630095a2b57a4819123c2587e8e8f.setContent(html_359bd72c5bc15d505ecbb97225e11c0c);
-            
-        
-
-        marker_2747053e1784fe960cf8ef89866009fd.bindPopup(popup_639630095a2b57a4819123c2587e8e8f)
-        ;
-
-        
-    
-    
-                marker_2747053e1784fe960cf8ef89866009fd.setIcon(icon_a2a11e458aa16003fcbe9aa42f13ea15);
-            
 </script>
 </html>
