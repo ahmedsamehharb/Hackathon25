@@ -19,9 +19,8 @@ def add_issue_counts(gdf, join_col, group_col, issues):
     gdf['issue_count'] = gdf['issue_count'].fillna(0)
     return stringify_datetime_columns(gdf)
 
-# --- Function to add choropleth + borders + tooltip layers ---
+# --- Function to add choropleth + tooltip layers ---
 def add_choropleth_with_tooltip(m, gdf, name, geojson_key, tooltip_fields, tooltip_aliases, color, legend):
-    # Add choropleth fill
     folium.Choropleth(
         geo_data=gdf.to_json(),
         name=name,
@@ -36,57 +35,27 @@ def add_choropleth_with_tooltip(m, gdf, name, geojson_key, tooltip_fields, toolt
         control=True
     ).add_to(m)
 
-    # Add GeoJson with visible borders and tooltip
     folium.GeoJson(
         gdf.to_json(),
-        name=f'{name} Borders',
-        style_function=lambda feature: {
-            'fillOpacity': 0,       # No fill here, just borders
-            'color': 'black',       # Border color
-            'weight': 1.5,          # Border thickness
-            'opacity': 0.7
-        },
-        tooltip=folium.GeoJsonTooltip(
-            fields=tooltip_fields,
-            aliases=tooltip_aliases,
-            localize=True
-        )
+        name=f'{name} Info',
+        tooltip=folium.GeoJsonTooltip(fields=tooltip_fields, aliases=tooltip_aliases, localize=True)
     ).add_to(m)
 
 # --- Set page config ---
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
 # --- Load custom CSS ---
-with open("style.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 
 # --- Load data ---
 issues_df = pd.read_csv('Data/complete_issues_data.csv')
-states = gpd.read_file("Data/VG5000_LAN.shp").to_crs("EPSG:4326")
-
-try:
-    districts = gpd.read_file("Data/VG2500_KRS.shp").to_crs("EPSG:4326")
-except:
-    districts = None
-
-try:
-    municipalities = gpd.read_file("Data/VG2500_GEM.shp").to_crs("EPSG:4326")
-except:
-    municipalities = None
-
-# --- Preprocessing ---
 issues_df['date'] = pd.to_datetime(issues_df['date'], errors='coerce')
-states.columns = states.columns.str.strip()
-if districts is not None:
-    districts.columns = districts.columns.str.strip()
-if municipalities is not None:
-    municipalities.columns = municipalities.columns.str.strip()
+issues_df['municipality_norm'] = issues_df['municipality'].str.lower().str.strip()
 
-# Make sure normalized municipality names exist for joining, or create them if missing:
-if municipalities is not None and 'GEN_norm' not in municipalities.columns:
-    municipalities['GEN_norm'] = municipalities['GEN'].str.lower().str.replace(r'\W', '', regex=True)
-if 'municipality_norm' not in issues_df.columns:
-    issues_df['municipality_norm'] = issues_df['municipality'].fillna('').str.lower().str.replace(r'\W', '', regex=True)
+states = gpd.read_file("Data/VG5000_LAN.shp").to_crs("EPSG:4326")
+districts = gpd.read_file("Data/VG5000_KRS.shp").to_crs("EPSG:4326")
+municipalities = gpd.read_file("Data/VG5000_GEM.shp").to_crs("EPSG:4326")
+municipalities['GEN_norm'] = municipalities['GEN'].str.lower().str.strip()
 
 # --- Sidebar filters ---
 st.sidebar.header("Filter Complaints")
@@ -122,48 +91,35 @@ m = folium.Map(location=[51.0, 10.0], zoom_start=6)
 
 # --- Add issue counts to shapefiles ---
 states_with_data = add_issue_counts(states, "GEN", "state", filtered)
-districts_with_data = None
-municipalities_with_data = None
+districts_with_data = add_issue_counts(districts, "GEN", "district", filtered)
+issues_per_municipality = filtered.groupby('municipality_norm').size().reset_index(name='issue_count')
+municipalities_with_data = municipalities.merge(
+    issues_per_municipality,
+    left_on='GEN_norm',
+    right_on='municipality_norm',
+    how='left'
+)
+municipalities_with_data['issue_count'] = municipalities_with_data['issue_count'].fillna(0)
+municipalities_with_data = stringify_datetime_columns(municipalities_with_data)
 
-if districts is not None:
-    districts_with_data = add_issue_counts(districts, "GEN", "district", filtered)
-
-if municipalities is not None:
-    issues_per_municipality = filtered.groupby('municipality_norm').size().reset_index(name='issue_count')
-    municipalities_with_data = municipalities.merge(
-        issues_per_municipality,
-        left_on='GEN_norm',
-        right_on='municipality_norm',
-        how='left'
-    )
-    municipalities_with_data['issue_count'] = municipalities_with_data['issue_count'].fillna(0)
-    municipalities_with_data = stringify_datetime_columns(municipalities_with_data)
-
-# --- Add choropleth + borders based on selected view ---
+# --- Add choropleth based on selected view ---
 if view_level == "State":
     add_choropleth_with_tooltip(
         m, states_with_data, "States", "GEN",
         ['GEN', 'issue_count'], ['State:', 'Issues:'],
         'YlOrRd', 'Number of Issues (States)'
     )
-elif view_level == "District" and districts_with_data is not None:
+elif view_level == "District":
     add_choropleth_with_tooltip(
         m, districts_with_data, "Districts", "GEN",
         ['GEN', 'issue_count'], ['District:', 'Issues:'],
         'YlGnBu', 'Number of Issues (Districts)'
     )
-elif view_level == "Municipality" and municipalities_with_data is not None:
+elif view_level == "Municipality":
     add_choropleth_with_tooltip(
         m, municipalities_with_data, "Municipalities", "GEN_norm",
         ['GEN', 'issue_count'], ['Municipality:', 'Issues:'],
         'PuRd', 'Number of Issues (Municipalities)'
-    )
-else:
-    st.warning(f"Shapefile for {view_level} not found. Showing state level.")
-    add_choropleth_with_tooltip(
-        m, states_with_data, "States", "GEN",
-        ['GEN', 'issue_count'], ['State:', 'Issues:'],
-        'YlOrRd', 'Number of Issues (States)'
     )
 
 # --- Marker Popups ---
