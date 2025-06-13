@@ -67,7 +67,24 @@ municipalities['GEN_norm'] = municipalities['GEN'].str.lower().str.strip()
 st.sidebar.header("Filter Complaints")
 view_level = st.sidebar.radio("Heatmap Granularity", options=["State", "District", "Municipality"])
 date_range = st.sidebar.date_input("Date range", [])
-category = st.sidebar.multiselect("Category", issues_df['category'].unique())
+
+# Create category options with icons
+category_options = {
+    'Umwelt': '🗑️',
+    'Bildung': '🏫',
+    'Verkehr': '🚗',
+    'Digitalisierung': '💻',
+    'Sicherheit': '🔒',
+    'Gesundheit': '🏥',
+    'Wirtschaft': '💼',
+    'Migration': '🛂'
+}
+category = st.sidebar.multiselect(
+    "Category",
+    options=list(category_options.keys()),
+    format_func=lambda x: f"{category_options[x]} {x}"
+)
+
 age_group = st.sidebar.multiselect("Age Group", issues_df['age_group'].unique())
 gender = st.sidebar.multiselect("Gender", issues_df['gender'].unique())
 origin = st.sidebar.multiselect("Origin", issues_df['origin'].unique())
