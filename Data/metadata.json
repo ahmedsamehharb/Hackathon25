@@ -1,0 +1,59 @@
+{
+  "task": "Political Heatmap Visualization (Challenge 2)",
+  "created": "2025-06-13T03:43:32.547918",
+  "data_info": {
+    "total_issues": 993,
+    "unique_locations": 900,
+    "date_range": {
+      "start": "2023-01-01 07:28:00",
+      "end": "2025-06-13 10:49:00"
+    },
+    "categories": [
+      "Wirtschaft",
+      "Migration",
+      "Gesundheit",
+      "Verkehr",
+      "Bildung",
+      "Digitalisierung",
+      "Umwelt",
+      "Sicherheit"
+    ],
+    "states": [
+      "Nordrhein-Westfalen",
+      "Mecklenburg-Vorpommern",
+      "Schleswig-Holstein",
+      "Niedersachsen",
+      "Brandenburg",
+      "Bayern",
+      "Th\u00fcringen",
+      "Saarland",
+      "Sachsen-Anhalt",
+      "Baden-W\u00fcrttemberg",
+      "Rheinland-Pfalz",
+      "Hessen",
+      "Sachsen",
+      "Hamburg",
+      "Berlin",
+      "Bremen"
+    ]
+  },
+  "available_files": {
+    "complete_issues_data.csv": "All issues with full details",
+    "daily_aggregated.csv": "Issues aggregated by day and location",
+    "weekly_aggregated.csv": "Issues aggregated by week and location",
+    "monthly_aggregated.csv": "Issues aggregated by month and location"
+  },
+  "demographic_fields": [
+    "age_group",
+    "gender",
+    "origin"
+  ],
+  "geographic_fields": [
+    "latitude",
+    "longitude",
+    "municipality",
+    "district",
+    "state"
+  ],
+  "note": "This is a visualization challenge - no prediction required"
+}
