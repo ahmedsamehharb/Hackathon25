@@ -5,6 +5,7 @@ import folium
 from folium.plugins import MarkerCluster
 from streamlit_folium import folium_static
 
+
 # --- Helper function to stringify datetime columns for GeoJSON compatibility ---
 def stringify_datetime_columns(gdf):
     for col, dtype in gdf.dtypes.items():
@@ -12,12 +13,14 @@ def stringify_datetime_columns(gdf):
             gdf[col] = gdf[col].astype(str)
     return gdf
 
+
 # --- Function to add issue counts to GeoDataFrame ---
 def add_issue_counts(gdf, join_col, group_col, issues):
     issues_group = issues.groupby(group_col).size().reset_index(name='issue_count')
     gdf = gdf.merge(issues_group, left_on=join_col, right_on=group_col, how='left')
     gdf['issue_count'] = gdf['issue_count'].fillna(0)
     return stringify_datetime_columns(gdf)
+
 
 # --- Function to add choropleth + tooltip layers ---
 def add_choropleth_with_tooltip(m, gdf, name, geojson_key, tooltip_fields, tooltip_aliases, color, legend):
@@ -47,6 +50,7 @@ def add_choropleth_with_tooltip(m, gdf, name, geojson_key, tooltip_fields, toolt
         }
     ).add_to(m)
 
+
 # --- Set page config ---
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
@@ -59,13 +63,13 @@ issues_df['date'] = pd.to_datetime(issues_df['date'], errors='coerce')
 issues_df['municipality_norm'] = issues_df['municipality'].str.lower().str.strip()
 
 states = gpd.read_file("Data/VG5000_LAN.shp").to_crs("EPSG:4326")
-districts = gpd.read_file("Data/VG5000_KRS.shp").to_crs("EPSG:4326")
+# districts = gpd.read_file("Data/VG5000_KRS.shp").to_crs("EPSG:4326")  # Not used anymore
 municipalities = gpd.read_file("Data/VG5000_GEM.shp").to_crs("EPSG:4326")
 municipalities['GEN_norm'] = municipalities['GEN'].str.lower().str.strip()
 
 # --- Sidebar filters ---
 st.sidebar.header("Filter Complaints")
-view_level = st.sidebar.radio("Heatmap Granularity", options=["State", "District", "Municipality"])
+view_level = st.sidebar.radio("Heatmap Granularity", options=["State", "Municipality"])  # Removed District option
 date_range = st.sidebar.date_input("Date range", [])
 
 # Create category options with icons
@@ -96,7 +100,8 @@ show_common_issues = st.sidebar.checkbox("Show Most Common Issue per State")
 # --- Filter data ---
 filtered = issues_df.copy()
 if date_range:
-    filtered = filtered[(filtered['date'] >= pd.to_datetime(date_range[0])) & (filtered['date'] <= pd.to_datetime(date_range[-1]))]
+    filtered = filtered[
+        (filtered['date'] >= pd.to_datetime(date_range[0])) & (filtered['date'] <= pd.to_datetime(date_range[-1]))]
 if category:
     filtered = filtered[filtered['category'].isin(category)]
 if age_group:
@@ -127,17 +132,7 @@ if view_level == "State":
     )
     if selected:
         location_issues = filtered[filtered['state'] == selected]
-elif view_level == "District":
-    options = sorted(filtered['district'].unique())
-    selected = st.sidebar.selectbox(
-        "Select District",
-        options=options,
-        index=None,
-        placeholder="Choose a district..."
-    )
-    if selected:
-        location_issues = filtered[filtered['district'] == selected]
-else:  # Municipality
+elif view_level == "Municipality":
     options = sorted(filtered['municipality'].unique())
     selected = st.sidebar.selectbox(
         "Select Municipality",
@@ -159,11 +154,11 @@ if 'selected' in locals() and selected:
             index=None,
             placeholder="Choose an issue type..."
         )
-        
+
         if selected_category:
             # Filter issues for selected category
             category_issues = location_issues[location_issues['category'] == selected_category]
-            
+
             # Display issues for selected category
             st.sidebar.markdown(f"### {category_options[selected_category]} {selected_category} Issues")
             for _, issue in category_issues.iterrows():
@@ -182,7 +177,7 @@ m = folium.Map(location=[51.0, 10.0], zoom_start=6)
 
 # --- Add issue counts to shapefiles ---
 states_with_data = add_issue_counts(states, "GEN", "state", filtered)
-districts_with_data = add_issue_counts(districts, "GEN", "district", filtered)
+# districts_with_data = add_issue_counts(districts, "GEN", "district", filtered)  # Not used anymore
 issues_per_municipality = filtered.groupby('municipality_norm').size().reset_index(name='issue_count')
 municipalities_with_data = municipalities.merge(
     issues_per_municipality,
@@ -199,12 +194,6 @@ if view_level == "State":
         m, states_with_data, "States", "GEN",
         ['GEN', 'issue_count'], ['State:', 'Issues:'],
         'YlOrRd', 'Number of Issues (States)'
-    )
-elif view_level == "District":
-    add_choropleth_with_tooltip(
-        m, districts_with_data, "Districts", "GEN",
-        ['GEN', 'issue_count'], ['District:', 'Issues:'],
-        'YlOrRd', 'Number of Issues (Districts)'
     )
 elif view_level == "Municipality":
     add_choropleth_with_tooltip(
@@ -241,26 +230,31 @@ if show_common_issues:
     ).add_to(m)
 
 # --- Marker Popups ---
-# Define category colors globally
 CATEGORY_COLORS = {
-    'Category1': '#e74c3c',
-    'Category2': '#f39c12',
-    'Category3': '#27ae60',
+    'Umwelt': '#e74c3c',
+    'Bildung': '#f39c12',
+    'Verkehr': '#27ae60',
+    'Digitalisierung': '#3498db',
+    'Sicherheit': '#9b59b6',
+    'Gesundheit': '#1abc9c',
+    'Wirtschaft': '#e67e22',
+    'Migration': '#95a5a6',
 }
+
 
 def get_category_icon(category):
     icon_mapping = {
-        'Umwelt': 'trash',           # Trash icon for environmental issues
-        'Bildung': 'school',         # School icon for education issues
-        'Verkehr': 'car',           # Car icon for traffic/transportation issues
-        'Digitalisierung': 'laptop', # Laptop icon for digital/online issues
-        'Sicherheit': 'lock',   # Lightbulb icon for safety/lighting issues
-        'Gesundheit': 'hospital',    # Hospital icon for health issues
-        'Wirtschaft': 'briefcase',   # Briefcase icon for business/economic issues
-        'Migration': 'passport',     # Passport icon for migration issues
+        'Umwelt': 'trash',
+        'Bildung': 'school',
+        'Verkehr': 'car',
+        'Digitalisierung': 'laptop',
+        'Sicherheit': 'lock',
+        'Gesundheit': 'hospital',
+        'Wirtschaft': 'briefcase',
+        'Migration': 'passport',
     }
-    # Default to a standard marker if category not found
     return icon_mapping.get(category, 'map-marker')
+
 
 def make_popup_html(row):
     color = CATEGORY_COLORS.get(row['category'], '#3498db')
@@ -276,7 +270,7 @@ def make_popup_html(row):
     """
     return html
 
-# --- Show markers if enabled ---
+
 if show_markers:
     marker_cluster = MarkerCluster().add_to(m)
     for _, row in filtered.iterrows():
@@ -294,5 +288,5 @@ if show_markers:
                 icon=icon
             ).add_to(marker_cluster)
 
-# --- Show map in the main area ---
+# --- Show map ---
 folium_static(m, width=1400, height=800)
