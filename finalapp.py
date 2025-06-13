@@ -30,7 +30,7 @@ def add_choropleth_with_tooltip(m, gdf, name, geojson_key, tooltip_fields, toolt
         fill_color=color,
         fill_opacity=0.7,
         line_opacity=0.7,
-        line_color='black',  # Set border color to black
+        line_color='black',
         legend_name=legend,
         overlay=True,
         control=True
@@ -41,7 +41,7 @@ def add_choropleth_with_tooltip(m, gdf, name, geojson_key, tooltip_fields, toolt
         name=f'{name} Info',
         tooltip=folium.GeoJsonTooltip(fields=tooltip_fields, aliases=tooltip_aliases, localize=True),
         style_function=lambda feature: {
-            'color': 'black',  # Set border color to black
+            'color': 'black',
             'weight': 1,
             'fillOpacity': 0
         }
@@ -49,9 +49,6 @@ def add_choropleth_with_tooltip(m, gdf, name, geojson_key, tooltip_fields, toolt
 
 # --- Set page config ---
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
-
-# --- Load custom CSS ---
-
 
 # --- Load data ---
 issues_df = pd.read_csv('Data/complete_issues_data.csv')
@@ -91,6 +88,7 @@ origin = st.sidebar.multiselect("Origin", issues_df['origin'].unique())
 state = st.sidebar.multiselect("State", issues_df['state'].unique())
 entity_level = st.sidebar.multiselect("Entity Level", issues_df['responsible_entity_level'].unique())
 show_markers = st.sidebar.checkbox("Show Markers", value=True)
+show_common_issues = st.sidebar.checkbox("Show Most Common Issue per State")
 
 # --- Filter data ---
 filtered = issues_df.copy()
@@ -145,6 +143,33 @@ elif view_level == "Municipality":
         'YlOrRd', 'Number of Issues (Municipalities)'
     )
 
+# --- Show most common issue per state ---
+if show_common_issues:
+    top_issue_per_state = (
+        filtered.groupby(['state', 'category'])
+        .size()
+        .reset_index(name='count')
+        .sort_values(['state', 'count'], ascending=[True, False])
+        .drop_duplicates(subset='state')
+    )
+    states_common = states.merge(top_issue_per_state, left_on='GEN', right_on='state', how='left')
+    states_common = stringify_datetime_columns(states_common)
+
+    folium.GeoJson(
+        states_common.to_json(),
+        name="Most Common Issue",
+        tooltip=folium.GeoJsonTooltip(
+            fields=['GEN', 'category'],
+            aliases=['State:', 'Most Common Issue:'],
+            localize=True
+        ),
+        style_function=lambda feature: {
+            'fillOpacity': 0,
+            'color': 'black',
+            'weight': 1
+        }
+    ).add_to(m)
+
 # --- Marker Popups ---
 # Define category colors globally
 CATEGORY_COLORS = {
@@ -154,7 +179,6 @@ CATEGORY_COLORS = {
 }
 
 def get_category_icon(category):
-    # Map categories to Font Awesome icons based on actual issue types
     icon_mapping = {
         'Umwelt': 'trash',           # Trash icon for environmental issues
         'Bildung': 'school',         # School icon for education issues
