@@ -50,6 +50,9 @@ def add_choropleth_with_tooltip(m, gdf, name, geojson_key, tooltip_fields, toolt
 # --- Set page config ---
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
+# Create two columns for the main layout
+col1, col2 = st.columns([2, 1])
+
 # --- Load data ---
 issues_df = pd.read_csv('Data/complete_issues_data.csv')
 issues_df['date'] = pd.to_datetime(issues_df['date'], errors='coerce')
@@ -67,14 +70,14 @@ date_range = st.sidebar.date_input("Date range", [])
 
 # Create category options with icons
 category_options = {
-    'Umwelt': '🗑️',
-    'Bildung': '🏫',
-    'Verkehr': '🚗',
-    'Digitalisierung': '💻',
-    'Sicherheit': '🔒',
-    'Gesundheit': '🏥',
-    'Wirtschaft': '💼',
-    'Migration': '🛂'
+    'Umwelt': '🗑️ ',
+    'Bildung': '🏫 ',
+    'Verkehr': '🚗 ',
+    'Digitalisierung': '💻 ',
+    'Sicherheit': '🔒 ',
+    'Gesundheit': '🏥 ',
+    'Wirtschaft': '💼 ',
+    'Migration': '🛂 '
 }
 category = st.sidebar.multiselect(
     "Category",
@@ -224,5 +227,40 @@ if show_markers:
                 icon=icon
             ).add_to(marker_cluster)
 
-# --- Show map ---
-folium_static(m, width=1400, height=800)
+# --- Show map in the left column ---
+with col1:
+    folium_static(m, width=1000, height=800)
+
+# --- Show municipality issues in the right column ---
+with col2:
+    st.header("Municipality Issues")
+    
+    # Create a selectbox for municipalities
+    selected_municipality = st.selectbox(
+        "Select Municipality",
+        options=sorted(issues_df['municipality'].unique()),
+        index=None,
+        placeholder="Choose a municipality..."
+    )
+    
+    if selected_municipality:
+        # Filter issues for selected municipality
+        municipality_issues = filtered[filtered['municipality'] == selected_municipality]
+        
+        if len(municipality_issues) > 0:
+            # Group issues by category
+            for category in sorted(municipality_issues['category'].unique()):
+                category_issues = municipality_issues[municipality_issues['category'] == category]
+                
+                # Create an expander for each category
+                with st.expander(f"{category_options[category]} {category} ({len(category_issues)} issues)"):
+                    for _, issue in category_issues.iterrows():
+                        st.markdown(f"""
+                        <div style='font-size: 14px;'>
+                        Date: {issue['date'].date()}<br>
+                        Description: {issue['description']}<br>
+                        ---
+                        </div>
+                        """, unsafe_allow_html=True)
+        else:
+            st.info("No issues found for this municipality in the selected filters.")
