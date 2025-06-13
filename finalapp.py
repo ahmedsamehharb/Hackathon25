@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import geopandas as gpd
 import folium
-from folium.plugins import MarkerCluster, Search
+from folium.plugins import MarkerCluster
 from streamlit_folium import folium_static
 
 
@@ -269,26 +269,6 @@ def make_popup_html(row):
     </div>
     """
     return html
-
-searchable_geojson = folium.GeoJson(
-    municipalities_with_data,
-    name='Municipality Search (hidden)',
-    tooltip=None,  # Disable tooltip
-    popup=None,    # Disable popup
-    style_function=lambda feature: {
-        'fillOpacity': 0,
-        'color': 'transparent',
-        'weight': 0
-    }
-).add_to(m)
-
-Search(
-    layer=searchable_geojson,
-    geom_type='Polygon',
-    placeholder='Search for municipality...',
-    search_label='GEN',
-    collapsed=False
-).add_to(m)
 
 
 if show_markers:
