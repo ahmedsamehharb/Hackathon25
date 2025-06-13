@@ -154,13 +154,30 @@ if show_common_issues:
     ).add_to(m)
 
 # --- Marker Popups ---
-def make_popup_html(row):
-    cat_color = {
-        'Category1': '#e74c3c',
-        'Category2': '#f39c12',
-        'Category3': '#27ae60',
+# Define category colors globally
+CATEGORY_COLORS = {
+    'Category1': '#e74c3c',
+    'Category2': '#f39c12',
+    'Category3': '#27ae60',
+}
+
+def get_category_icon(category):
+    # Map categories to Font Awesome icons based on actual issue types
+    icon_mapping = {
+        'Umwelt': 'trash',           # Trash icon for environmental issues
+        'Bildung': 'school',         # School icon for education issues
+        'Verkehr': 'car',           # Car icon for traffic/transportation issues
+        'Digitalisierung': 'laptop', # Laptop icon for digital/online issues
+        'Sicherheit': 'lock',   # Lightbulb icon for safety/lighting issues
+        'Gesundheit': 'hospital',    # Hospital icon for health issues
+        'Wirtschaft': 'briefcase',   # Briefcase icon for business/economic issues
+        'Migration': 'passport',     # Passport icon for migration issues
     }
-    color = cat_color.get(row['category'], '#3498db')
+    # Default to a standard marker if category not found
+    return icon_mapping.get(category, 'map-marker')
+
+def make_popup_html(row):
+    color = CATEGORY_COLORS.get(row['category'], '#3498db')
     html = f"""
     <div style="font-family: Arial; font-size: 12px;">
       <strong style="font-size:14px">{row['category']}</strong> 
@@ -179,9 +196,16 @@ if show_markers:
     for _, row in filtered.iterrows():
         if pd.notna(row['latitude']) and pd.notna(row['longitude']):
             popup_html = make_popup_html(row)
+            icon_name = get_category_icon(row['category'])
+            icon = folium.Icon(
+                icon=icon_name,
+                color=CATEGORY_COLORS.get(row['category'], 'blue'),
+                prefix='fa'
+            )
             folium.Marker(
                 [row['latitude'], row['longitude']],
-                popup=folium.Popup(popup_html, max_width=300)
+                popup=folium.Popup(popup_html, max_width=300),
+                icon=icon
             ).add_to(marker_cluster)
 
 # --- Show map ---
