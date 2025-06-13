@@ -162,7 +162,6 @@ CATEGORY_COLORS = {
 }
 
 def get_category_icon(category):
-    # Map categories to Font Awesome icons based on actual issue types
     icon_mapping = {
         'Umwelt': 'trash',           # Trash icon for environmental issues
         'Bildung': 'school',         # School icon for education issues
