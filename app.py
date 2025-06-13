@@ -192,9 +192,15 @@ if show_markers:
     for _, row in filtered.iterrows():
         if pd.notna(row['latitude']) and pd.notna(row['longitude']):
             popup_html = make_popup_html(row)
+            icon = folium.Icon(
+                icon=get_category_icon(row['category']),
+                color=CATEGORY_COLORS.get(row['category'], '#3498db'),
+                prefix='fa'
+            )
             folium.Marker(
                 [row['latitude'], row['longitude']],
-                popup=folium.Popup(popup_html, max_width=300)
+                popup=folium.Popup(popup_html, max_width=300),
+                icon=icon
             ).add_to(marker_cluster)
 
 # --- Show map ---
