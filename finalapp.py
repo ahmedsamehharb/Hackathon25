@@ -119,7 +119,7 @@ elif view_level == "District":
     add_choropleth_with_tooltip(
         m, districts_with_data, "Districts", "GEN",
         ['GEN', 'issue_count'], ['District:', 'Issues:'],
-        'YlGnBu', 'Number of Issues (Districts)'
+        'YlOrRd', 'Number of Issues (Districts)'
     )
 elif view_level == "Municipality":
     add_choropleth_with_tooltip(
