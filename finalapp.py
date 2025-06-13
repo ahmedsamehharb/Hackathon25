@@ -29,7 +29,8 @@ def add_choropleth_with_tooltip(m, gdf, name, geojson_key, tooltip_fields, toolt
         key_on=f'feature.properties.{geojson_key}',
         fill_color=color,
         fill_opacity=0.7,
-        line_opacity=0.2,
+        line_opacity=0.7,
+        line_color='black',  # Set border color to black
         legend_name=legend,
         overlay=True,
         control=True
@@ -38,7 +39,12 @@ def add_choropleth_with_tooltip(m, gdf, name, geojson_key, tooltip_fields, toolt
     folium.GeoJson(
         gdf.to_json(),
         name=f'{name} Info',
-        tooltip=folium.GeoJsonTooltip(fields=tooltip_fields, aliases=tooltip_aliases, localize=True)
+        tooltip=folium.GeoJsonTooltip(fields=tooltip_fields, aliases=tooltip_aliases, localize=True),
+        style_function=lambda feature: {
+            'color': 'black',  # Set border color to black
+            'weight': 1,
+            'fillOpacity': 0
+        }
     ).add_to(m)
 
 # --- Set page config ---
@@ -119,7 +125,7 @@ elif view_level == "Municipality":
     add_choropleth_with_tooltip(
         m, municipalities_with_data, "Municipalities", "GEN_norm",
         ['GEN', 'issue_count'], ['Municipality:', 'Issues:'],
-        'PuRd', 'Number of Issues (Municipalities)'
+        'YlOrRd', 'Number of Issues (Municipalities)'
     )
 
 # --- Marker Popups ---
